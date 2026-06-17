@@ -11,7 +11,7 @@ const config = {
     database: process.env.MYSQLDATABASE || process.env.DB_NAME || 'gymbuddy_database_1',
     port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306'),
     connectionLimit: 10,
-    ssl: process.env.DB_SSL === 'true' ? true : false
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
 };
 
 console.log('[DB] Connecting to MySQL:', config.host + ':' + config.port + '/' + config.database);
@@ -22,7 +22,11 @@ let dbConnected = false;
 
 export const isDBConnected = () => dbConnected;
 
-export const connectDB = async (retries = 10, delay = 5000) => {
+export const connectDB = async () => {
+    await attemptConnection();
+};
+
+async function attemptConnection(retries = 10, delay = 5000) {
     console.log('[DB] Connecting to database...');
     for (let i = 0; i < retries; i++) {
         try {
@@ -31,7 +35,7 @@ export const connectDB = async (retries = 10, delay = 5000) => {
             connection.release();
             dbConnected = true;
             console.log('Database connected successfully');
-            return true;
+            return;
         } catch (error) {
             console.log('[DB] Connection attempt ' + (i + 1) + '/' + retries + ' failed:', error.message);
             if (i < retries - 1) {
@@ -40,9 +44,10 @@ export const connectDB = async (retries = 10, delay = 5000) => {
             }
         }
     }
-    console.error('[DB] All connection attempts failed. Server will run without database.');
-    return false;
-};
+    console.error('[DB] All attempts failed. Will retry in 60 seconds...');
+    // Coba lagi 60 detik kemudian
+    setTimeout(attemptConnection, 60000, retries, delay);
+}
 
 export const getDBPool = () => {
     console.log('[Config] getDBPool called');
