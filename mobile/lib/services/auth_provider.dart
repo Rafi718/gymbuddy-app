@@ -47,6 +47,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _checkToken();
   }
 
+  /// Constructor for testing with a pre-set initial state (no API calls on init)
+  AuthNotifier.test(AuthState initialState) : _api = ApiService(), super(initialState);
+
   Future<void> _checkToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');

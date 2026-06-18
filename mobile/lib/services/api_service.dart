@@ -46,8 +46,15 @@ class ApiService {
 
   Map<String, dynamic> _handleError(dynamic e) {
     if (e is DioException) {
-      final msg = e.response?.data?['message']?.toString() ?? 
-                  'Terjadi kesalahan. Coba lagi.';
+      final data = e.response?.data;
+      String msg;
+      if (data is Map) {
+        msg = data['message']?.toString() ?? 'Terjadi kesalahan. Coba lagi.';
+      } else if (data != null) {
+        msg = data.toString();
+      } else {
+        msg = 'Terjadi kesalahan. Coba lagi.';
+      }
       return {'success': false, 'message': msg};
     }
     return {'success': false, 'message': 'Koneksi error. Periksa internet Anda.'};
