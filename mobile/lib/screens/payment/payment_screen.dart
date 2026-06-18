@@ -57,7 +57,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       await _api.getPaymentStatus(widget.bookingId);
       if (!mounted) return;
       // After returning from in-app payment page, check payment status
-      _paymentDone = true;
+      setState(() => _paymentDone = true);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pembayaran diproses. Silakan cek status booking Anda.'),

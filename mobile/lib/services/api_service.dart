@@ -1,3 +1,5 @@
+// ignore_for_file: use_null_aware_elements
+
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -262,7 +264,6 @@ class ApiService {
   // ==================== FAQ ====================
   Future<Map<String, dynamic>> getFaq({String? kategori}) async {
     try {
-      // ignore: use_null_aware_elements
       final params = <String, dynamic>{
         if (kategori != null) 'kategori': kategori,
       };
@@ -357,7 +358,6 @@ class ApiService {
   Future<Map<String, dynamic>> adminGetBookings({String? status}) async {
     try {
       final res = await _dio.get('/bookings', queryParameters: <String, dynamic>{
-        // ignore: use_null_aware_elements
         if (status != null) 'status': status,
       });
       return res.data;
