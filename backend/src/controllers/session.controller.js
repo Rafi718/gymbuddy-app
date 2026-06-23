@@ -140,7 +140,7 @@ export const deleteSession = async (req, res) => {
         const userRole = req.user.role;
 
         const db = await getDBPool();
-        const [sessionRows] = await db.query('SELECT trainer_id FROM session WHERE id = ?', [id]);
+        const sessionRows = await db.query('SELECT trainer_id FROM session WHERE id = ?', [id]);
 
         if (!sessionRows || sessionRows.length === 0) return error(res, 'Sesi tidak ditemukan', 404);
 

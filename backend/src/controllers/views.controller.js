@@ -122,10 +122,10 @@ export const member_progress_summary = async (req, res) => {
         const db = await getDBPool();
         const rows = await db.query(
             `SELECT p.id as progress_id, u.id as member_id, u.nama as member_name,
-                    p.activity, p.duration, p.note, p.jam_nyatat as recorded_at
+                    p.activity, p.duration, p.note, p.recorded_at
              FROM progress p
-             JOIN user u ON p.member_id = u.id
-             ORDER BY p.jam_nyatat DESC`
+             JOIN "user" u ON p.member_id = u.id
+             ORDER BY p.recorded_at DESC`
         );
 
         cache.set(cacheKey, rows, 300);
@@ -145,11 +145,11 @@ export const member_progress_summary_id = async (req, res) => {
         const db = await getDBPool();
         const rows = await db.query(
             `SELECT p.id as progress_id, u.id as member_id, u.nama as member_name,
-                    p.activity, p.duration, p.note, p.jam_nyatat as recorded_at
+                    p.activity, p.duration, p.note, p.recorded_at
              FROM progress p
-             JOIN user u ON p.member_id = u.id
+             JOIN "user" u ON p.member_id = u.id
              WHERE p.member_id = ?
-             ORDER BY p.jam_nyatat DESC`,
+             ORDER BY p.recorded_at DESC`,
             [id]
         );
 

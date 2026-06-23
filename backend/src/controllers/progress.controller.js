@@ -6,7 +6,7 @@ export const getAllProgress = async (req, res) => {
     try {
         const db = await getDBPool();
         const rows = await db.query(
-            `SELECT p.id, p.member_id, p.booking_id, p.activity, p.duration, p.note, p.jam_nyatat as recorded_at,
+            `SELECT p.id, p.member_id, p.booking_id, p.activity, p.duration, p.note, p.recorded_at,
                     u.nama as member_name
              FROM progress p
              JOIN user u ON p.member_id = u.id`

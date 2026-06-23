@@ -42,7 +42,7 @@ export const getAllArticles = async (req, res) => {
             db.query(query, queryParams)
         ]);
 
-        // Handle both mysql2 and mariadb result formats
+        // Handle result format from db wrapper
         const countData = Array.isArray(countResult) ? countResult[0] : countResult;
         const rowData = Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0]) ? rows[0] : rows;
         const total = countData?.total || 0;
@@ -72,7 +72,7 @@ export const createArticle = async (req, res) => {
         cache.del('articles_list');
         return success(res, { id: Number(result.insertId) }, 'Artikel berhasil dibuat', 201);
     } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') return error(res, 'Slug sudah digunakan', 400);
+        if (err.code === '23505') return error(res, 'Slug sudah digunakan', 400);
         return error(res, 'Gagal membuat artikel', 500);
     }
 };

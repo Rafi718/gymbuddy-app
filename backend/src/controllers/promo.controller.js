@@ -76,7 +76,7 @@ export const createPromo = async (req, res) => {
         cache.del('promo_list');
         return success(res, { id: Number(result.insertId) }, 'Promo berhasil dibuat', 201);
     } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') return error(res, 'Kode promo sudah digunakan', 400);
+        if (err.code === '23505') return error(res, 'Kode promo sudah digunakan', 400);
         return error(res, 'Gagal membuat promo', 500);
     }
 };

@@ -84,7 +84,7 @@ export const registerUser = async (req, res) => {
             message: 'Akun berhasil dibuat. Silakan login.' 
         });
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === '23505') {
             return res.status(400).json({ message: 'Email sudah terdaftar. Gunakan email lain.' });
         }
         console.error('Register error:', error);
@@ -119,7 +119,7 @@ export const registerTrainer = async (req, res) => {
             message: 'Akun trainer berhasil dibuat.' 
         });
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === '23505') {
             return res.status(400).json({ message: 'Email sudah terdaftar.' });
         }
         console.error('Register trainer error:', error);
@@ -152,7 +152,7 @@ export const registerAdmin = async (req, res) => {
             message: 'Admin berhasil dibuat.' 
         });
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === '23505') {
             return res.status(400).json({ message: 'Email sudah terdaftar.' });
         }
         console.error('Register admin error:', error);
