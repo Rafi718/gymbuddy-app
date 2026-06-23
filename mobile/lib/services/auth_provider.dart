@@ -19,6 +19,8 @@ class AuthState {
   final String? token;
   final String? error;
   final bool isLoading;
+  /// true setelah _checkToken() selesai (awal app)
+  final bool isInitialized;
 
   const AuthState({
     this.isLoggedIn = false,
@@ -28,6 +30,7 @@ class AuthState {
     this.token,
     this.error,
     this.isLoading = false,
+    this.isInitialized = false,
   });
 
   AuthState copyWith({
@@ -38,6 +41,7 @@ class AuthState {
     String? token,
     String? error,
     bool? isLoading,
+    bool? isInitialized,
   }) => AuthState(
     isLoggedIn: isLoggedIn ?? this.isLoggedIn,
     isAdmin: isAdmin ?? this.isAdmin,
@@ -46,6 +50,7 @@ class AuthState {
     token: token ?? this.token,
     error: error,
     isLoading: isLoading ?? this.isLoading,
+    isInitialized: isInitialized ?? this.isInitialized,
   );
 }
 
@@ -74,10 +79,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
           isLoggedIn: true,
           isAdmin: user?['role'] == 'admin',
           isTrainer: user?['role'] == 'trainer',
+          isInitialized: true,
         );
       } catch (e) {
-        await _logout();
+        // Token expired — clear dan tandai selesai
+        ApiService.setToken(null);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('token');
+        state = state.copyWith(
+          isLoggedIn: false, token: null, user: null,
+          isAdmin: false, isTrainer: false,
+          isInitialized: true,
+        );
       }
+    } else {
+      // Tidak ada token, tandai selesai inisialisasi
+      state = state.copyWith(isInitialized: true);
     }
   }
 

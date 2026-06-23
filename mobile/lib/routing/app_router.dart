@@ -36,11 +36,15 @@ GoRouter createRouter(WidgetRef ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     redirect: (context, state) {
+      final isInitialized = auth.isInitialized;
       final isLoggedIn = auth.isLoggedIn;
       final isAuthRoute = state.matchedLocation == '/login' || 
                           state.matchedLocation == '/register';
       final isAdminRoute = state.matchedLocation.startsWith('/admin');
       final isTrainerRoute = state.matchedLocation.startsWith('/trainer');
+
+      // TUNGGU sampai _checkToken() selesai sebelum redirect
+      if (!isInitialized) return null;
 
       if (!isLoggedIn && !isAuthRoute) return '/login';
       if (isLoggedIn && isAuthRoute) return '/';
