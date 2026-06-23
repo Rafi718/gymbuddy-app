@@ -12,9 +12,13 @@ mobile/ios/Flutter/ephemeral/
 mobile/.packages
 mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
-backend/uploads/profiles/*
-!backend/uploads/profiles/.gitkeep
 backend/uploads/*
 !backend/uploads/.gitkeep
+!backend/uploads/profiles/
+backend/uploads/profiles/*
+!backend/uploads/profiles/.gitkeep
+!backend/uploads/profiles/trainer-arif.jpeg
+!backend/uploads/profiles/trainer-fadhel.jpeg
+!backend/uploads/profiles/trainer-gusti.jpeg
 frontend/dist/
 .vercel
