@@ -27,30 +27,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _loadSessions() async {
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       final res = await _api.getSessions(limit: 10);
+      if (!mounted) return;
       setState(() {
         _sessions = (res['data'] as List?) ?? [];
       });
     } catch (e) {
       // Handle error silently
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _loadBookings() async {
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       final res = await _api.getMyBookings();
+      if (!mounted) return;
       setState(() {
         _bookings = (res['data'] as List?) ?? [];
       });
     } catch (e) {
       // Handle error silently
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
