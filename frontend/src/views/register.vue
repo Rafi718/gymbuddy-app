@@ -77,6 +77,13 @@
               <span class="absolute right-6 top-[55px] -translate-y-1/2 text-red-500 pointer-events-none text-xs">▼</span>
             </div>
 
+            <div v-if="formData.role === 'trainer'" class="space-y-2">
+              <label class="text-xs font-semibold text-gray-500 uppercase ml-1">Spesialisasi</label>
+              <input v-model="formData.spesialisasi" type="text" placeholder="Contoh: Strength Training, Yoga, Cardio"
+                     :class="['w-full bg-[#1A1A1A] border-none text-white px-6 py-4 rounded-full focus:ring-2 outline-none transition-all placeholder-gray-700', errors.spesialisasi ? 'ring-2 ring-red-500' : 'focus:ring-red-500']">
+              <p v-if="errors.spesialisasi" class="text-red-400 text-[10px] font-bold ml-2 mt-1">{{ errors.spesialisasi }}</p>
+            </div>
+
             <button type="submit" :disabled="loading"
                     class="w-full bg-red-500 text-white py-4 rounded-full font-bold text-lg hover:bg-red-600 shadow-xl shadow-red-500/20 transition-all mt-4">
               {{ loading ? 'Memproses...' : 'Buat Akun' }}
@@ -121,6 +128,7 @@ const formData = ref({
   email: '',
   password: '',
   role: '',
+  spesialisasi: '',
   propinsi: '',
   kota: ''
 })
@@ -130,12 +138,13 @@ const errors = ref({
   email: '',
   password: '',
   role: '',
+  spesialisasi: '',
   propinsi: '',
   kota: ''
 })
 
 const validateForm = () => {
-  const e = { nama: '', email: '', password: '', role: '', propinsi: '', kota: '' }
+  const e = { nama: '', email: '', password: '', role: '', spesialisasi: '', propinsi: '', kota: '' }
   let valid = true
 
   if (!formData.value.nama.trim()) { e.nama = 'Nama lengkap wajib diisi'; valid = false }
@@ -146,6 +155,9 @@ const validateForm = () => {
   if (!formData.value.propinsi.trim()) { e.propinsi = 'Provinsi wajib diisi'; valid = false }
   if (!formData.value.kota.trim()) { e.kota = 'Kota wajib diisi'; valid = false }
   if (!formData.value.role) { e.role = 'Pilih role Anda'; valid = false }
+  if (formData.value.role === 'trainer' && !formData.value.spesialisasi.trim()) {
+    e.spesialisasi = 'Spesialisasi wajib diisi untuk trainer'; valid = false
+  }
 
   errors.value = e
   return valid
@@ -166,6 +178,10 @@ const handleRegister = async () => {
       password: formData.value.password,
       propinsi: formData.value.propinsi,
       kota: formData.value.kota
+    }
+
+    if (formData.value.role === 'trainer') {
+      payload.spesialisasi = formData.value.spesialisasi
     }
 
     await api.post(endpoint, payload)

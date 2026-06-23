@@ -2,7 +2,7 @@
   <div class="p-8 text-white">
     <header class="mb-8 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-black uppercase tracking-tighter">Kelola Booking</h1>
+        <h1 class="text-3xl font-black uppercase tracking-tighter">Booking & Pembayaran</h1>
         <p class="text-gray-500 text-sm mt-1">Manajemen booking dan pembayaran</p>
       </div>
     </header>

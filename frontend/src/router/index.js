@@ -53,7 +53,6 @@ const routes = [
   { path: '/admin/users', component: AdminUsers, meta: { requiresAdmin: true } },
   { path: '/admin/trainers', component: AdminTrainers, meta: { requiresAdmin: true } },
   { path: '/admin/bookings', component: AdminBookings, meta: { requiresAdmin: true } },
-  { path: '/admin/payments', component: AdminBookings, meta: { requiresAdmin: true } },
 ]
 
 const router = createRouter({

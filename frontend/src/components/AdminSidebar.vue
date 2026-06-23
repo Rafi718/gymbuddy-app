@@ -18,10 +18,7 @@
       </router-link>
     </nav>
 
-    <div class="p-5 border-t border-white/5 space-y-2">
-      <router-link to="/dashboard" class="flex items-center gap-2 px-4 py-2 text-xs text-gray-500 hover:text-white transition-colors">
-        <ArrowLeftIcon class="w-4 h-4" /> Kembali ke User
-      </router-link>
+    <div class="p-5 border-t border-white/5">
       <button @click="handleLogout"
         class="flex w-full items-center gap-3 px-4 py-3 border border-white/10 rounded-xl text-sm hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all cursor-pointer">
         <LogOutIcon class="w-5 h-5" /> Keluar
@@ -37,8 +34,6 @@ import {
   UsersIcon,
   UserCogIcon,
   CalendarCheckIcon,
-  WalletIcon,
-  ArrowLeftIcon,
   LogOutIcon
 } from 'lucide-vue-next'
 
@@ -49,8 +44,7 @@ const navItems = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
   { path: '/admin/users', label: 'User', icon: UsersIcon },
   { path: '/admin/trainers', label: 'Trainer', icon: UserCogIcon },
-  { path: '/admin/bookings', label: 'Booking', icon: CalendarCheckIcon },
-  { path: '/admin/payments', label: 'Pembayaran', icon: WalletIcon },
+  { path: '/admin/bookings', label: 'Booking & Pembayaran', icon: CalendarCheckIcon },
 ]
 
 const isActive = (path) => route.path.startsWith(path)
