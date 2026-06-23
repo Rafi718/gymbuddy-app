@@ -95,7 +95,13 @@ class _FindTrainersScreenState extends ConsumerState<FindTrainersScreen> {
         title: const Text('Cari Trainer'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
       ),
       body: Column(

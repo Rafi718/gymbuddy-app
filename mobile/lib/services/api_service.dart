@@ -17,8 +17,9 @@ class ApiService {
 
   static String get baseUrl => _isProduction ? _prodUrl : _devUrl;
 
-  /// Set token langsung ke default headers Dio (lebih reliable dari interceptor)
+  /// Set token langsung ke default headers Dio dan cache
   static void setToken(String? token) {
+    _lastToken = token;
     final dio = _instance._dio;
     if (token != null) {
       dio.options.headers['Authorization'] = 'Bearer $token';
@@ -26,6 +27,8 @@ class ApiService {
       dio.options.headers.remove('Authorization');
     }
   }
+  /// Token terakhir yang di-set (di-cache untuk akses cepat)
+  static String? _lastToken;
 
   ApiService._internal() {
     _dio = Dio(BaseOptions(
@@ -36,9 +39,21 @@ class ApiService {
     ));
 
     _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        // Skip untuk login (ga perlu token)
+        if (options.path.contains('/auth/login') || options.path.contains('/auth/register')) {
+          return handler.next(options);
+        }
+        // Pastikan Authorization header selalu ada untuk request lain
+        if (options.headers['Authorization'] == null && _lastToken != null) {
+          options.headers['Authorization'] = 'Bearer $_lastToken';
+        }
+        return handler.next(options);
+      },
       onError: (error, handler) async {
         if (error.response?.statusCode == 401) {
           _dio.options.headers.remove('Authorization');
+          _lastToken = null;
           final prefs = await SharedPreferences.getInstance();
           await prefs.remove('token');
         }

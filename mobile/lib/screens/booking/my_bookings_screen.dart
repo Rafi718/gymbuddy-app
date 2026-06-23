@@ -108,7 +108,13 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
       appBar: AppBar(
         title: const Text('Booking Saya'),          leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
           ),
       ),
       body: _buildContent(theme),
