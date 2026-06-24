@@ -12,9 +12,9 @@
       <select v-model="statusFilter" @change="fetchData"
               class="bg-[#0f1115] border border-gray-800 p-3 rounded-xl text-sm outline-none">
         <option value="">Semua Status</option>
-        <option value="pending">Pending</option>
-        <option value="confirmed">Confirmed</option>
-        <option value="cancelled">Cancelled</option>
+        <option value="pending">Menunggu</option>
+        <option value="confirmed">Dikonfirmasi</option>
+        <option value="cancelled">Dibatalkan</option>
       </select>
       <select v-model="paymentFilter" @change="fetchData"
               class="bg-[#0f1115] border border-gray-800 p-3 rounded-xl text-sm outline-none">
@@ -46,12 +46,12 @@
               <td class="py-4 px-6 text-sm">{{ b.member_nama || '-' }}</td>
               <td class="py-4 px-6 text-sm text-gray-400">{{ b.session_title }}</td>
               <td class="py-4 px-6">
-                <span :class="statusBadge(b.status)" class="text-[9px] px-3 py-1 rounded-full border font-black uppercase">{{ b.status }}</span>
+                <span :class="statusBadge(b.status)" class="text-[9px] px-3 py-1 rounded-full border font-black uppercase">{{ bookingStatusLabel(b.status) }}</span>
               </td>
               <td class="py-4 px-6">
                 <span v-if="b.payment_status === 'settlement'" class="text-green-400 text-xs font-bold">✓ Lunas</span>
-                <span v-else-if="b.payment_status === 'pending'" class="text-yellow-400 text-xs font-bold">⏳ {{ b.payment_status }}</span>
-                <span v-else class="text-red-400 text-xs font-bold">✕ {{ b.payment_status }}</span>
+                <span v-else-if="b.payment_status === 'pending'" class="text-yellow-400 text-xs font-bold">⏳ Menunggu</span>
+                <span v-else class="text-red-400 text-xs font-bold">✕ {{ paymentStatusLabel(b.payment_status) }}</span>
               </td>
               <td class="py-4 px-6 text-sm font-bold">
                 {{ formatRupiah(b.session_price) }}
@@ -102,6 +102,16 @@ const handleVisibility = () => {
 const statusBadge = (s) => {
   const map = { pending: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20', confirmed: 'bg-green-500/10 text-green-500 border-green-500/20', cancelled: 'bg-red-500/10 text-red-500 border-red-500/20' }
   return map[s?.toLowerCase()] || ''
+}
+
+const bookingStatusLabel = (s) => {
+  const map = { pending: 'Menunggu', confirmed: 'Dikonfirmasi', cancelled: 'Dibatalkan', completed: 'Selesai' }
+  return map[s?.toLowerCase()] || s
+}
+
+const paymentStatusLabel = (s) => {
+  const map = { settlement: 'Lunas', pending: 'Menunggu', cancel: 'Dibatalkan', expire: 'Kadaluarsa' }
+  return map[s?.toLowerCase()] || s
 }
 
 const formatRupiah = (p) => p ? `Rp${Number(p).toLocaleString('id-ID')}` : 'Rp0'

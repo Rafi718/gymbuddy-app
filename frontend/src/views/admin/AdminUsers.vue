@@ -2,8 +2,8 @@
   <div class="p-8 text-white">
     <header class="mb-8 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-black uppercase tracking-tighter">Kelola User</h1>
-        <p class="text-gray-500 text-sm mt-1">Manajemen semua user, trainer, dan admin</p>
+        <h1 class="text-3xl font-black uppercase tracking-tighter">Kelola Pengguna</h1>
+        <p class="text-gray-500 text-sm mt-1">Manajemen semua pengguna, pelatih, dan admin</p>
       </div>
       <div class="text-xs text-gray-600 font-bold">{{ total }} total</div>
     </header>
@@ -14,9 +14,9 @@
              class="bg-[#0f1115] border border-gray-800 p-3 rounded-xl text-sm focus:border-red-500 outline-none transition-all">
       <select v-model="roleFilter" @change="fetchData"
               class="bg-[#0f1115] border border-gray-800 p-3 rounded-xl text-sm text-gray-400 outline-none">
-        <option value="">Semua Role</option>
-        <option value="customer">Customer</option>
-        <option value="trainer">Trainer</option>
+        <option value="">Semua Peran</option>
+        <option value="customer">Pelanggan</option>
+        <option value="trainer">Pelatih</option>
         <option value="admin">Admin</option>
       </select>
       <div></div>
@@ -30,7 +30,7 @@
             <tr class="bg-black/20">
               <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Nama</th>
               <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Email</th>
-              <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Role</th>
+              <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Peran</th>
               <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Lokasi</th>
               <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Aksi</th>
             </tr>
@@ -40,7 +40,7 @@
               <td class="py-4 px-6 text-sm font-medium">{{ u.nama }}</td>
               <td class="py-4 px-6 text-sm text-gray-400">{{ u.email }}</td>
               <td class="py-4 px-6">
-                <span :class="roleBadge(u.role)" class="text-[9px] px-3 py-1 rounded-full border font-black uppercase">{{ u.role }}</span>
+                <span :class="roleBadge(u.role)" class="text-[9px] px-3 py-1 rounded-full border font-black uppercase">{{ roleLabel(u.role) }}</span>
               </td>
               <td class="py-4 px-6 text-sm text-gray-400">{{ u.kota || '-' }}</td>
               <td class="py-4 px-6">
@@ -55,10 +55,10 @@
     <!-- Pagination -->
     <div v-if="totalPages > 1" class="flex justify-center gap-2 mt-6">
       <button @click="page = Math.max(1, page - 1); fetchData()" :disabled="page === 1"
-              class="px-4 py-2 bg-[#0f1115] border border-gray-800 rounded-xl text-xs font-bold disabled:opacity-50">← Prev</button>
+              class="px-4 py-2 bg-[#0f1115] border border-gray-800 rounded-xl text-xs font-bold disabled:opacity-50">← Sebelumnya</button>
       <span class="px-4 py-2 text-sm text-gray-500">Halaman {{ page }} dari {{ totalPages }}</span>
       <button @click="page = Math.min(totalPages, page + 1); fetchData()" :disabled="page === totalPages"
-              class="px-4 py-2 bg-[#0f1115] border border-gray-800 rounded-xl text-xs font-bold disabled:opacity-50">Next →</button>
+              class="px-4 py-2 bg-[#0f1115] border border-gray-800 rounded-xl text-xs font-bold disabled:opacity-50">Berikutnya →</button>
     </div>
   </div>
 </template>
@@ -78,6 +78,11 @@ const totalPages = computed(() => Math.ceil(total.value / limit))
 const roleBadge = (role) => {
   const map = { admin: 'bg-red-500/10 text-red-500 border-red-500/20', trainer: 'bg-blue-500/10 text-blue-500 border-blue-500/20', customer: 'bg-green-500/10 text-green-500 border-green-500/20' }
   return map[role] || 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+}
+
+const roleLabel = (role) => {
+  const map = { admin: 'Admin', trainer: 'Pelatih', customer: 'Pelanggan' }
+  return map[role?.toLowerCase()] || role
 }
 
 const fetchData = async () => {

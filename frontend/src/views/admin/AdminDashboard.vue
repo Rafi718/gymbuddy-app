@@ -44,8 +44,8 @@
           >
             <div class="flex justify-between items-center mb-6">
               <div>
-                <h3 class="font-black text-sm uppercase tracking-widest text-white">Distribusi Role User</h3>
-                <p class="text-gray-500 text-xs mt-1">{{ totalUsers }} user terdaftar</p>
+                <h3 class="font-black text-sm uppercase tracking-widest text-white">Distribusi Peran Pengguna</h3>
+                <p class="text-gray-500 text-xs mt-1">{{ totalUsers }} pengguna terdaftar</p>
               </div>
             </div>
 
@@ -59,7 +59,7 @@
                   <div class="w-10 h-10 rounded-xl flex items-center justify-center" :class="roleStyle(role.role).bg">
                     <component :is="roleStyle(role.role).icon" class="w-5 h-5" :class="roleStyle(role.role).text" />
                   </div>
-                  <p class="text-xs font-bold uppercase tracking-wider text-gray-500">{{ role.role }}</p>
+                  <p class="text-xs font-bold uppercase tracking-wider text-gray-500">{{ roleLabel(role.role) }}</p>
                 </div>
                 <p class="text-3xl font-black text-white tracking-tight">{{ role.count }}</p>
                 <p class="text-gray-600 text-[10px] font-bold uppercase tracking-widest mt-1">
@@ -89,7 +89,7 @@
               >
                 <div class="flex items-center gap-3">
                   <span class="text-[10px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider" :class="statusBadgeClass(s.status)">
-                    {{ s.status }}
+                    {{ bookingStatusLabel(s.status) }}
                   </span>
                 </div>
                 <div class="text-right">
@@ -157,11 +157,21 @@ const totalBookings = computed(() => {
 })
 
 const statCards = computed(() => [
-  { label: 'Total User', value: stats.value.totalUsers || 0, icon: UsersIcon },
-  { label: 'Trainer', value: stats.value.trainers || 0, icon: UserCogIcon },
+  { label: 'Total Pengguna', value: stats.value.totalUsers || 0, icon: UsersIcon },
+  { label: 'Pelatih', value: stats.value.trainers || 0, icon: UserCogIcon },
   { label: 'Total Booking', value: stats.value.totalBookings || 0, icon: CalendarCheckIcon },
   { label: 'Pembayaran Lunas', value: stats.value.settledPayments || 0, icon: WalletIcon }
 ])
+
+const roleLabel = (role) => {
+  const map = { admin: 'Admin', trainer: 'Pelatih', customer: 'Pelanggan' }
+  return map[role?.toLowerCase()] || role
+}
+
+const bookingStatusLabel = (status) => {
+  const map = { pending: 'Menunggu', confirmed: 'Dikonfirmasi', cancelled: 'Dibatalkan', completed: 'Selesai' }
+  return map[status?.toLowerCase()] || status
+}
 const roleStyle = (role) => {
   const map = {
     admin: { icon: ShieldIcon, bg: 'bg-red-500/10', text: 'text-red-500' },
@@ -183,42 +193,35 @@ const statusBadgeClass = (status) => {
 
 const fetchStats = async () => {
   try {
-    const [usersRes, bookingsRes, meRes] = await Promise.all([
-      api.get('/users', { params: { limit: 100 } }),
-      api.get('/bookings', { params: { limit: 100 } }),
+    const [statsRes, meRes] = await Promise.all([
+      api.get('/analytics/dashboard'),
       api.get('/auth/me').catch(() => ({ data: { data: {} } }))
     ])
 
-    const allUsers = usersRes.data?.data || []
-    const allBookings = bookingsRes.data?.data || []
+    const data = statsRes.data?.data || {}
 
     const roles = ['admin', 'trainer', 'customer']
-    roleDistribution.value = roles.map(role => ({
-      role,
-      count: allUsers.filter(u => u.role === role).length
-    }))
+    roleDistribution.value = roles.map(role => {
+      const found = data.roleDistribution?.find(r => r.role === role)
+      return { role, count: found?.count ?? 0 }
+    })
 
-    const statuses = ['pending', 'confirmed', 'cancelled']
-    bookingStatus.value = statuses.map(status => ({
-      status,
-      count: allBookings.filter(b => b.status === status).length
-    }))
+    const statuses = ['pending', 'confirmed', 'cancelled', 'completed']
+    bookingStatus.value = statuses.map(status => {
+      const found = data.bookingStatusDistribution?.find(b => b.status === status)
+      return { status, count: found?.count ?? 0 }
+    })
 
-    const trainerCount = allUsers.filter(u => u.role === 'trainer').length
-    const settledPayments = allBookings.filter(b => b.payment_status === 'settlement').length
+    const trainerCount = data.roleDistribution?.find(r => r.role === 'trainer')?.count ?? 0
 
     stats.value = {
-      totalUsers: allUsers.length,
+      totalUsers: data.totalUsers ?? 0,
       trainers: trainerCount,
-      totalBookings: allBookings.length,
-      settledPayments
+      totalBookings: data.totalBookings ?? 0,
+      settledPayments: data.settledPayments ?? 0,
     }
 
     user.value = meRes.data?.data || {}
-
-    if (allUsers.length === 0 && allBookings.length === 0) {
-      showToast('Data user dan booking kosong.', 'error')
-    }
   } catch (err) {
     console.error('Fetch stats error:', err)
     showToast(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal memuat data dashboard.', 'error')

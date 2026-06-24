@@ -22,6 +22,7 @@ import faqRoutes from './modules/faq/faq.routes';
 import reminderRoutes from './modules/reminder/reminder.routes';
 import dietRoutes from './modules/diet/diet.routes';
 import uploadRoutes from './modules/upload/upload.routes';
+import analyticsRoutes from './modules/analytics/analytics.routes';
 
 const app = express();
 
@@ -99,6 +100,7 @@ app.use('/api/v1/faqs', faqRoutes);
 app.use('/api/v1/reminders', reminderRoutes);
 app.use('/api/v1/diet-programs', dietRoutes);
 app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

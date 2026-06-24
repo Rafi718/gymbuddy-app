@@ -48,7 +48,7 @@
               <td class="py-6 px-8 text-center">
                 <span :class="getStatusClass(booker.status)"
                       class="text-[8px] px-4 py-1.5 rounded-full border font-black uppercase tracking-widest inline-block">
-                  {{ booker.status || 'Pending' }}
+                  {{ statusLabel(booker.status) }}
                 </span>
               </td>
               <td class="py-6 px-8 text-center">
@@ -142,6 +142,11 @@ const getStatusClass = (status) => {
   if (status === 'pending') return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'
   if (status === 'cancelled') return 'bg-red-400/10 text-red-400 border-red-400/20'
   return 'bg-green-500/10 text-green-500 border-green-500/20'
+}
+
+const statusLabel = (status) => {
+  const map = { pending: 'Menunggu', confirmed: 'Dikonfirmasi', cancelled: 'Dibatalkan', completed: 'Selesai' }
+  return map[status?.toLowerCase()] || 'Menunggu'
 }
 
 const fetchBookers = async () => {
