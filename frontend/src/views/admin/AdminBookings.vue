@@ -43,7 +43,7 @@
           <tbody>
             <tr v-for="b in filteredBookings" :key="b.id" class="border-b border-gray-900/50 hover:bg-white/[0.02]">
               <td class="py-4 px-6 text-sm text-gray-500">#{{ b.id }}</td>
-              <td class="py-4 px-6 text-sm">{{ b.member_name }}</td>
+              <td class="py-4 px-6 text-sm">{{ b.member_nama || '-' }}</td>
               <td class="py-4 px-6 text-sm text-gray-400">{{ b.session_title }}</td>
               <td class="py-4 px-6">
                 <span :class="statusBadge(b.status)" class="text-[9px] px-3 py-1 rounded-full border font-black uppercase">{{ b.status }}</span>
@@ -53,10 +53,16 @@
                 <span v-else-if="b.payment_status === 'pending'" class="text-yellow-400 text-xs font-bold">⏳ {{ b.payment_status }}</span>
                 <span v-else class="text-red-400 text-xs font-bold">✕ {{ b.payment_status }}</span>
               </td>
-              <td class="py-4 px-6 text-sm font-bold">{{ formatRupiah(b.payment_amount) }}</td>
+              <td class="py-4 px-6 text-sm font-bold">
+                {{ formatRupiah(b.session_price) }}
+                <span v-if="b.session_price !== b.payment_amount" class="block text-[10px] text-gray-500 font-normal">
+                  (Dibayar: {{ formatRupiah(b.payment_amount) }})
+                </span>
+              </td>
               <td class="py-4 px-6 text-xs text-gray-400">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-gray-500">{{ formatDateTime(b.session_start_time || b.createdAt) }}</span>
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-gray-300">{{ formatDateTime(b.session_start_time) }}</span>
+                  <span v-if="b.session_end_time" class="text-gray-600">{{ formatDuration(b.session_start_time, b.session_end_time) }}</span>
                 </div>
               </td>
             </tr>
@@ -68,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import api from '../../utils/api'
 
 const bookings = ref([])
@@ -90,18 +96,40 @@ const fetchData = async () => {
   } catch (err) { console.error(err) }
 }
 
+const handleVisibility = () => {
+  if (document.visibilityState === 'visible') fetchData()
+}
+
 const statusBadge = (s) => {
   const map = { pending: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20', confirmed: 'bg-green-500/10 text-green-500 border-green-500/20', cancelled: 'bg-red-500/10 text-red-500 border-red-500/20' }
   return map[s?.toLowerCase()] || ''
 }
 
 const formatRupiah = (p) => p ? `Rp${Number(p).toLocaleString('id-ID')}` : 'Rp0'
+
 const formatDateTime = (d) => {
   if (!d) return '-'
-  const date = new Date(d)
+  // Pastikan ISO string dengan timezone di-parse ke local time
+  const iso = d.toString().replace(' ', 'T')
+  const date = new Date(iso)
+  if (isNaN(date.getTime())) return '-'
   return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) +
     ' • ' + date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
 }
 
-onMounted(fetchData)
+const formatDuration = (start, end) => {
+  if (!start || !end) return ''
+  const s = new Date(start.toString().replace(' ', 'T'))
+  const e = new Date(end.toString().replace(' ', 'T'))
+  const mins = Math.round((e - s) / 60000)
+  return mins > 0 ? `${mins} menit` : ''
+}
+
+onMounted(() => {
+  fetchData()
+  document.addEventListener('visibilitychange', handleVisibility)
+})
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', handleVisibility)
+})
 </script>
