@@ -431,10 +431,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ListTile(
               leading: CircleAvatar(
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                child: Text(
-                  (auth.user?['nama'] ?? 'U').toString()[0].toUpperCase(),
-                  style: const TextStyle(color: Colors.white),
-                ),
+                backgroundImage: (auth.user?['foto'] != null && (auth.user!['foto'] as String).isNotEmpty)
+                    ? CachedNetworkImageProvider('${ApiService.photoBaseUrl}/${auth.user!['foto']}')
+                    : null,
+                child: (auth.user?['foto'] == null || (auth.user!['foto'] as String).isEmpty)
+                    ? Text(
+                        (auth.user?['nama'] ?? 'U').toString()[0].toUpperCase(),
+                        style: const TextStyle(color: Colors.white),
+                      )
+                    : null,
               ),
               title: Text(auth.user?['nama'] ?? 'User'),
               subtitle: Text(auth.user?['email'] ?? ''),

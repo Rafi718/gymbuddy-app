@@ -4,8 +4,12 @@
         
         <div class="bg-[#161920] rounded-[2rem] p-8 border border-gray-900 mb-8 relative overflow-hidden">
           <div class="relative z-10 flex flex-col md:flex-row items-center gap-8">
-            <div class="w-24 h-24 bg-red-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-black font-black text-3xl uppercase italic shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-              {{ getInitials(user.nama) }}
+            <div class="relative flex-shrink-0">
+              <div class="w-24 h-24 rounded-2xl overflow-hidden bg-red-500 flex-shrink-0 flex items-center justify-center text-black font-black text-3xl uppercase italic shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                <img v-if="user.foto" :src="photoUrl" class="w-full h-full object-cover" alt="Foto Profil" />
+                <span v-else>{{ getInitials(user.nama) }}</span>
+              </div>
+              <input ref="photoInput" type="file" accept="image/*" class="hidden" @change="handlePhotoChange" />
             </div>
 
             <div class="flex-grow text-center md:text-left">
@@ -19,9 +23,22 @@
                 </p>
               </div>
               
-              <button @click="openEditModal" class="bg-red-500 text-black px-6 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-400 shadow-lg shadow-red-500/10">
-                Edit Profil Trainer
-              </button>
+              <div class="flex items-center justify-center md:justify-start gap-3">
+                <button @click="openEditModal" class="bg-red-500 text-black px-6 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-400 shadow-lg shadow-red-500/10">
+                  Edit Profil Trainer
+                </button>
+                <button v-if="!user.foto" @click="triggerPhotoUpload" class="bg-gray-800 text-white px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-gray-700 border border-gray-700">
+                  Ganti Foto
+                </button>
+                <template v-else>
+                  <button @click="triggerPhotoUpload" class="bg-gray-800 text-white px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-gray-700 border border-gray-700">
+                    Ganti Foto
+                  </button>
+                  <button @click="handlePhotoDelete" class="bg-gray-900 text-red-500 px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-gray-800 border border-gray-800">
+                    Hapus Foto
+                  </button>
+                </template>
+              </div>
             </div>
           </div>
         </div>
@@ -92,9 +109,17 @@ import api from '../../utils/api'
 import { useAuthStore } from '../../stores/authStore'
 
 const authStore = useAuthStore()
-const user = ref({ id: '', nama: '', email: '', role: '', kota: '', propinsi: '' })
+const user = ref({ id: '', nama: '', email: '', role: '', kota: '', propinsi: '', foto: '' })
 const showModal = ref(false)
 const editForm = ref({ nama: '', propinsi: '', kota: '', email: '', spesialisasi: '', bio: '' })
+const photoInput = ref(null)
+
+const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000/api/v1' : 'https://api.gymbuddy.site/api/v1')
+const photoUrl = computed(() => {
+  if (!user.value.foto) return ''
+  const base = API_BASE.replace('/api/v1', '')
+  return `${base}/${user.value.foto}`
+})
 
 const infoFields = computed(() => ({
   "Nama Trainer": user.value.nama,
@@ -150,6 +175,52 @@ const getInitials = (name) => {
   if (!name) return 'GB'
   const p = name.split(' ')
   return p.length > 1 ? (p[0][0] + p[1][0]).toUpperCase() : p[0][0].toUpperCase()
+}
+
+const triggerPhotoUpload = () => {
+  photoInput.value?.click()
+}
+
+const handlePhotoChange = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  const formData = new FormData()
+  formData.append('foto', file)
+
+  try {
+    const res = await api.post('/upload/profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    const fotoPath = res.data?.data?.foto
+    if (fotoPath) {
+      user.value.foto = fotoPath
+      // update authStore dan localStorage supaya refleksi di seluruh UI
+      const updatedUser = { ...authStore.user, foto: fotoPath }
+      authStore.setUser(updatedUser)
+      alert('Foto profil berhasil diperbarui!')
+    }
+  } catch (err) {
+    console.error('Upload foto gagal:', err)
+    alert('Gagal upload foto. Coba lagi.')
+  }
+  // reset input supaya bisa pilih file yang sama lagi
+  e.target.value = ''
+}
+
+const handlePhotoDelete = async () => {
+  if (!confirm('Yakin ingin menghapus foto profil?')) return
+  try {
+    await api.put('/users/profile', { foto: null })
+    user.value.foto = ''
+    const updatedUser = { ...authStore.user }
+    delete updatedUser.foto
+    authStore.setUser(updatedUser)
+    alert('Foto profil berhasil dihapus!')
+  } catch (err) {
+    console.error('Hapus foto gagal:', err)
+    alert('Gagal menghapus foto. Coba lagi.')
+  }
 }
 
 onMounted(fetchUserProfile)

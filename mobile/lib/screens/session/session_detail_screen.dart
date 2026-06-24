@@ -17,6 +17,7 @@ class SessionDetailScreen extends ConsumerStatefulWidget {
 class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   final _api = ApiService();
   Map<String, dynamic>? _session;
+  List<dynamic> _myBookings = [];
   bool _isLoading = true;
   String? _error;
   bool _isBooking = false;
@@ -24,20 +25,43 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSession();
+    _loadData();
   }
 
-  Future<void> _loadSession() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final res = await _api.getSessionDetail(widget.sessionId);
-    if (res['success'] == true || res['data'] != null) {
-      setState(() { _session = res['data'] ?? res; _isLoading = false; });
+    final results = await Future.wait([
+      _api.getSessionDetail(widget.sessionId),
+      _api.getMyBookings(),
+    ]);
+    final sessionRes = results[0];
+    final bookingsRes = results[1];
+    if (sessionRes['success'] == true || sessionRes['data'] != null) {
+      _session = sessionRes['data'] ?? sessionRes;
     } else {
-      setState(() { _error = res['message'] ?? 'Gagal memuat detail sesi'; _isLoading = false; });
+      _error = sessionRes['message'] ?? 'Gagal memuat detail sesi';
     }
+    _myBookings = (bookingsRes['data'] as List?) ?? [];
+    setState(() => _isLoading = false);
+  }
+
+  bool get _isAlreadyBooked {
+    return _myBookings.any((b) =>
+      b['session_id'] == widget.sessionId &&
+      b['status'] != 'cancelled',
+    );
   }
 
   Future<void> _bookSession() async {
+    if (_isAlreadyBooked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Anda sudah booking sesi ini'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
     setState(() => _isBooking = true);
     final res = await _api.createBooking(widget.sessionId);
     setState(() => _isBooking = false);
@@ -51,7 +75,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message'] ?? 'Gagal booking'), backgroundColor: Colors.red[700]),
+          SnackBar(
+            content: Text(res['message'] ?? 'Gagal booking'),
+            backgroundColor: Colors.red[700],
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     }
@@ -119,14 +147,19 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: _isBooking ? null : _bookSession,
+                      onPressed: _isAlreadyBooked || _isBooking ? null : _bookSession,
                       icon: _isBooking
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : const Icon(Icons.calendar_today),
-                      label: Text(_isBooking ? 'Memproses...' : 'Ambil Sesi Ini'),
+                      label: Text(_isBooking
+                        ? 'Memproses...'
+                        : _isAlreadyBooked
+                          ? 'Sudah Booking'
+                          : 'Ambil Sesi Ini'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
+                        backgroundColor: _isAlreadyBooked ? Colors.green[600] : theme.colorScheme.primary,
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: _isAlreadyBooked ? Colors.green[600] : theme.colorScheme.primary.withAlpha(120),
                         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
