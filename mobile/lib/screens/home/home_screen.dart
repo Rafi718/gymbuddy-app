@@ -277,8 +277,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final status = item['status'] ?? '';
     final paymentStatus = item['payment_status'] ?? '';
     final baseUrl = ApiService.photoBaseUrl;
+    final sessionId = isSession ? (item['id'] as int?) : null;
 
-    return Card(
+    Widget cardContent = Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -410,6 +411,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+
+    if (isSession && sessionId != null) {
+      return GestureDetector(
+        onTap: () => context.push('/session/$sessionId'),
+        child: cardContent,
+      );
+    }
+    return cardContent;
   }
 
   void _showProfileMenu(BuildContext context, AuthState auth) {

@@ -1,6 +1,6 @@
 import { eq, ilike, and, desc, asc, sql, gt } from 'drizzle-orm';
 import { db } from '../../db/client';
-import { sessions, users } from '../../db/schema';
+import { sessions, users, bookings } from '../../db/schema';
 
 export async function findAll(opts: {
     page: number;
@@ -137,6 +137,13 @@ export async function update(id: number, data: Record<string, unknown>) {
     .where(eq(sessions.id, id))
     .returning();
     return rows[0] ?? null;
+}
+
+export async function countBookingsForSession(sessionId: number) {
+    const result = await db.select({ count: sql<number>`count(*)` })
+        .from(bookings)
+        .where(eq(bookings.session_id, sessionId));
+    return Number(result[0]?.count || 0);
 }
 
 export async function remove(id: number) {

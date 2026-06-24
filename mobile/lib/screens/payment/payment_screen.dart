@@ -67,7 +67,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!mounted) return;
 
-      // After returning from Midtrans, check payment status
+      // Wait a moment for Midtrans to process, then check status
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
       await _checkPaymentStatus();
     } else {
       if (mounted) {

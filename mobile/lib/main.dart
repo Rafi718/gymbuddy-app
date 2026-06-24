@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'routing/app_router.dart';
 import 'services/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id');
   // Load token ke cache ApiService sebelum app jalan
   await initAuthToken();
   runApp(const ProviderScope(child: GymBuddyApp()));

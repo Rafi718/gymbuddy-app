@@ -37,11 +37,28 @@
           <div class="flex items-center text-[10px] text-gray-400 gap-2">
             <ActivityIcon class="w-3 h-3 text-red-500 opacity-50" /> Status: {{ session.status }}
           </div>
+          <div v-if="session.booking_count > 0" class="flex items-center text-[10px] text-amber-400 gap-2">
+            <UsersIcon class="w-3 h-3 text-amber-500 opacity-50" /> {{ session.booking_count }} booking aktif
+          </div>
         </div>
 
         <div class="flex gap-2 pt-6 border-t border-gray-800">
           <button @click="openEditModal(session)" class="flex-1 py-3 bg-white/5 border border-gray-800 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Edit</button>
-          <button @click="deleteSession(session.id)" class="px-4 py-3 bg-red-500/10 text-red-500 rounded-xl text-[9px] font-black uppercase border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">Hapus</button>
+          <button
+            v-if="session.booking_count > 0"
+            @click="showCannotDelete(session)"
+            class="px-4 py-3 bg-amber-500/10 text-amber-500 rounded-xl text-[9px] font-black uppercase border border-amber-500/20 hover:bg-amber-500 hover:text-white transition-all"
+            title="Sesi ini sudah memiliki booking"
+          >
+            Hapus
+          </button>
+          <button
+            v-else
+            @click="deleteSession(session.id)"
+            class="px-4 py-3 bg-red-500/10 text-red-500 rounded-xl text-[9px] font-black uppercase border border-red-500/20 hover:bg-red-500 hover:text-white transition-all"
+          >
+            Hapus
+          </button>
         </div>
       </div>
     </div>
@@ -89,7 +106,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { CalendarIcon, ClockIcon, ActivityIcon } from 'lucide-vue-next'
+import { CalendarIcon, ClockIcon, ActivityIcon, UsersIcon } from 'lucide-vue-next'
 import api from '../../utils/api'
 
 const sessions = ref([])
@@ -147,13 +164,30 @@ const handleSubmit = async () => {
   }
 }
 
+const showCannotDelete = (session) => {
+  alert(`Sesi "${session.title}" tidak bisa dihapus karena sudah memiliki ${session.booking_count} booking aktif.\n\nSilakan batalkan semua booking terlebih dahulu.`)
+}
+
 const deleteSession = async (id) => {
+  const session = sessions.value.find(s => s.id === id)
+  if (session?.booking_count > 0) {
+    showCannotDelete(session)
+    return
+  }
   if (!confirm('Yakin ingin menghapus sesi ini?')) return
   try {
     await api.delete(`/sessions/${id}`)
     await fetchData()
   } catch (err) {
-    alert("Gagal: " + (err.response?.data?.error?.message || err.response?.data?.message || "Tidak punya izin"))
+    const status = err.response?.status
+    const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message
+    if (status === 409) {
+      alert('Tidak bisa dihapus: ' + msg)
+    } else if (status === 403) {
+      alert('Tidak punya izin: ' + msg)
+    } else {
+      alert('Gagal menghapus: ' + msg)
+    }
   }
 }
 

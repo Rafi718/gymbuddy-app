@@ -1,4 +1,4 @@
-import { findAll, findById, findUpcoming, create, update, remove, isOwner } from './session.repo';
+import { findAll, findById, findUpcoming, create, update, remove, isOwner, countBookingsForSession } from './session.repo';
 
 export class SessionError extends Error {
     constructor(
@@ -21,8 +21,16 @@ export async function listSessions(opts: {
 }) {
     const { rows, total } = await findAll(opts);
     const totalPages = Math.ceil(total / opts.limit);
+
+    const rowsWithBookingCount = await Promise.all(
+        rows.map(async (session) => ({
+            ...session,
+            booking_count: await countBookingsForSession(session.id),
+        })),
+    );
+
     return {
-        data: rows,
+        data: rowsWithBookingCount,
         meta: { page: opts.page, limit: opts.limit, total, totalPages },
     };
 }
@@ -87,6 +95,15 @@ export async function deleteSession(id: number, userId: number, userRole: string
 
     if (userRole !== 'admin' && session.trainer_id !== userId) {
         throw new SessionError(403, 'FORBIDDEN', 'Anda tidak memiliki izin untuk menghapus sesi ini');
+    }
+
+    const bookingCount = await countBookingsForSession(id);
+    if (bookingCount > 0) {
+        throw new SessionError(
+            409,
+            'CONFLICT',
+            `Sesi ini sudah memiliki ${bookingCount} booking. Hapus atau batalkan semua booking terlebih dahulu sebelum menghapus sesi.`,
+        );
     }
 
     await remove(id);

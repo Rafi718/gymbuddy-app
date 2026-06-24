@@ -127,6 +127,146 @@ class _FindTrainersScreenState extends ConsumerState<FindTrainersScreen> {
     }
   }
 
+  void _showTrainerSessions(int trainerId, String trainerName) {
+    final trainerSessions = _sessions
+        .where((s) => s['trainer_id'] == trainerId)
+        .toList();
+    trainerSessions.sort((a, b) {
+      final aTime = DateTime.tryParse(a['start_time'] ?? '') ?? DateTime.now();
+      final bTime = DateTime.tryParse(b['start_time'] ?? '') ?? DateTime.now();
+      return aTime.compareTo(bTime);
+    });
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.3,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (_, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Sesi dari $trainerName',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${trainerSessions.length} sesi tersedia',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: trainerSessions.length,
+                      itemBuilder: (context, index) {
+                        final session = trainerSessions[index];
+                        final sid = session['id'] as int? ?? 0;
+                        final isBooked = _bookedSessionIds.contains(sid);
+                        final st = session['start_time'] != null
+                            ? DateFormat('dd MMM yyyy, HH:mm')
+                                .format(DateTime.parse(session['start_time']))
+                            : '--';
+                        final price = session['price'] ?? 0;
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  session['title'] ?? 'Sesi',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                                    const SizedBox(width: 4),
+                                    Text(st, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                    const Spacer(),
+                                    Text(
+                                      'Rp${NumberFormat('#,###', 'id_ID').format(num.tryParse(price.toString()) ?? 0)}',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: isBooked
+                                        ? null
+                                        : () async {
+                                            Navigator.pop(ctx);
+                                            await _bookSession(sid);
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: isBooked
+                                          ? Colors.green[100]
+                                          : Theme.of(context).colorScheme.primary,
+                                      foregroundColor: isBooked ? Colors.green[700] : Colors.white,
+                                      disabledBackgroundColor: Colors.green[100],
+                                      disabledForegroundColor: Colors.green[700],
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: Text(isBooked ? 'Booked ✓' : 'Ambil Sesi'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -358,7 +498,12 @@ class _FindTrainersScreenState extends ConsumerState<FindTrainersScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isBooked ? null : () => _bookSession(sessionId),
+                onPressed: isBooked
+                    ? null
+                    : () {
+                        final trainerId = session['trainer_id'] as int? ?? 0;
+                        _showTrainerSessions(trainerId, trainerName);
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isBooked
                       ? Colors.green[100]
@@ -370,7 +515,7 @@ class _FindTrainersScreenState extends ConsumerState<FindTrainersScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(isBooked ? 'Booked ✓' : 'Ambil Sesi'),
+                child: Text(isBooked ? 'Booked ✓' : 'Cek Sesi'),
               ),
             ),
           ],
