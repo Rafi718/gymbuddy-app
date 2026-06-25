@@ -119,13 +119,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      print('[AUTH_PROVIDER] Login start: $email');
       final res = await _api.login(email, password);
+      print('[AUTH_PROVIDER] Login result: $res');
       final token = res['data']?['token'] ?? res['token'];
       final user = res['data']?['user'] ?? res['user'];
 
       if (token == null || res['success'] == false) {
         final errMsg = res['message'] ?? 'Email atau password salah';
         final errCode = res['code'] ?? res['error']?['code'];
+        print('[AUTH_PROVIDER] Login failed. errMsg=$errMsg errCode=$errCode');
         state = state.copyWith(
           isLoading: false,
           error: errMsg,
@@ -172,7 +175,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<String?> register(Map<String, dynamic> data) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      print('[AUTH_PROVIDER] Register start: ${data['email']}');
       final res = await _api.register(data);
+      print('[AUTH_PROVIDER] Register result: $res');
       if (res['success'] == false) {
         state = state.copyWith(
           isLoading: false,
@@ -182,8 +187,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       state = state.copyWith(isLoading: false, error: null);
       final email = res['data']?['email'] ?? data['email'] as String?;
+      print('[AUTH_PROVIDER] Register returning email: $email');
       return email;
     } catch (e) {
+      print('[AUTH_PROVIDER] Register exception: $e');
       state = state.copyWith(
         isLoading: false,
         error: 'Registrasi gagal. Coba lagi.',

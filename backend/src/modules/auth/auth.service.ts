@@ -38,7 +38,9 @@ export async function registerCustomer(data: {
     propinsi?: string;
     kota?: string;
 }) {
+    console.log('[REGISTER]', data.email);
     const existing = await findUserByEmail(data.email);
+    console.log('[REGISTER] existing user:', existing ? existing.id : null);
     if (existing) {
         throw new AuthError(409, 'CONFLICT', 'Email sudah digunakan');
     }
@@ -59,6 +61,7 @@ export async function registerCustomer(data: {
     // Generate and send OTP
     const otp = generateOtp();
     otpCache.set(data.email, { otp, userId: user.id, nama: user.nama, attempts: 0 });
+    console.log('[REGISTER] created user id:', user.id, 'email:', data.email, 'otp:', otp);
     await sendOtpEmail(data.email, otp, user.nama);
 
     return { message: 'Pendaftaran berhasil. Silakan cek email Anda untuk kode OTP verifikasi.', email: data.email };
@@ -119,12 +122,15 @@ export async function registerAdmin(data: { nama: string; email: string; passwor
 }
 
 export async function login(email: string, password: string) {
+    console.log('[LOGIN] attempt:', email);
     const user = await findUserByEmail(email);
+    console.log('[LOGIN] user found:', user ? user.id : null);
     if (!user) {
         throw new AuthError(401, 'UNAUTHORIZED', 'Email atau password salah');
     }
 
     const valid = await bcrypt.compare(password, user.password);
+    console.log('[LOGIN] password valid:', valid, 'is_verified:', user.is_verified, 'role:', user.role);
     if (!valid) {
         throw new AuthError(401, 'UNAUTHORIZED', 'Email atau password salah');
     }
@@ -195,6 +201,7 @@ export async function resetPassword(email: string, otp: string, newPassword: str
 }
 
 export async function verifyOtp(email: string, otp: string) {
+    console.log('[VERIFY OTP] email:', email, 'otp:', otp);
     const stored = otpCache.get<{ otp: string; userId: number; nama: string; attempts: number }>(email);
     if (!stored) {
         throw new AuthError(400, 'OTP_EXPIRED', 'Kode OTP tidak ditemukan atau sudah kedaluwarsa. Silakan minta kode baru.');
@@ -208,12 +215,14 @@ export async function verifyOtp(email: string, otp: string) {
     if (stored.otp !== otp) {
         stored.attempts++;
         otpCache.set(email, stored);
+        console.log('[VERIFY OTP] wrong. expected:', stored.otp, 'got:', otp, 'attempts:', stored.attempts);
         throw new AuthError(400, 'OTP_INVALID', `Kode OTP salah. Percobaan tersisa: ${5 - stored.attempts}`);
     }
 
     // OTP correct — verify user
     await updateUserVerified(stored.userId);
     otpCache.del(email);
+    console.log('[VERIFY OTP] success. userId:', stored.userId);
 
     return { message: 'Email berhasil diverifikasi. Silakan login.' };
 }

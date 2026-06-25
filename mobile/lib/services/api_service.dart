@@ -12,7 +12,7 @@ class ApiService {
 
   static const String _prodUrl = 'https://api.gymbuddy.site/api/v1';
   static const String _devUrl = 'http://10.0.2.2:5000/api/v1';
-  static const bool _isProduction = true;
+  static const bool _isProduction = false;
 
   static String get baseUrl => _isProduction ? _prodUrl : _devUrl;
   static String get photoBaseUrl => baseUrl.replaceAll('/api/v1', '');
@@ -89,7 +89,8 @@ class ApiService {
   // ==================== AUTH ====================
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      print('[DEBUG] Login baseUrl: $baseUrl');
+      print('[DEBUG] Login request: $baseUrl/auth/login');
+      print('[DEBUG] Login payload: email=$email password=${'*' * password.length}');
       final res = await _dio.post('/auth/login', data: {
         'email': email,
         'password': password,
@@ -111,27 +112,39 @@ class ApiService {
     try {
       final role = data.remove('role') ?? 'customer';
       final endpoint = role == 'trainer' ? '/auth/register/trainer' : '/auth/register';
+      print('[DEBUG] Register request: $baseUrl$endpoint');
+      print('[DEBUG] Register payload: $data');
       final res = await _dio.post(endpoint, data: data);
+      print('[DEBUG] Register response: ${res.data}');
       return res.data;
     } catch (e) {
+      print('[DEBUG] Register error: $e');
       return _handleError(e);
     }
   }
 
   Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
     try {
+      print('[DEBUG] Verify OTP request: $baseUrl/auth/verify-otp');
+      print('[DEBUG] Verify OTP payload: email=$email otp=$otp');
       final res = await _dio.post('/auth/verify-otp', data: {'email': email, 'otp': otp});
+      print('[DEBUG] Verify OTP response: ${res.data}');
       return res.data;
     } catch (e) {
+      print('[DEBUG] Verify OTP error: $e');
       return _handleError(e);
     }
   }
 
   Future<Map<String, dynamic>> resendOtp(String email) async {
     try {
+      print('[DEBUG] Resend OTP request: $baseUrl/auth/resend-otp');
+      print('[DEBUG] Resend OTP payload: email=$email');
       final res = await _dio.post('/auth/resend-otp', data: {'email': email});
+      print('[DEBUG] Resend OTP response: ${res.data}');
       return res.data;
     } catch (e) {
+      print('[DEBUG] Resend OTP error: $e');
       return _handleError(e);
     }
   }
